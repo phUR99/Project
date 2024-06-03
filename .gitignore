@@ -1,0 +1,5 @@
+*.jpg
+*.gif
+snake-ai-pytorch/
+yolov5/
+/ForTest
