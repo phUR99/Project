@@ -5,7 +5,8 @@ module AddressEncoder(AddrIn, AddrOut);
     input [14:0] AddrIn;
     output reg [3:0]AddrOut;
     
-    // 코드 작성
+    // 15bit data Encoding
+    // combinational logic
     always @(*) begin
         case (AddrIn)
             15'b100_0000_0000_0000: AddrOut = 4'h0;

@@ -7,17 +7,15 @@ WriteReg, WriteEn, WriteData, ReadEn, ReadData1, ReadData2, ReadData3);
     parameter W = 8;   // number of bits in a word
     
     input   clk, rst_n;
-    input   WriteEn;     // RegWrite�� High�� �� register file�� data�� ����
-    input   [W-1:0] WriteData; // Register file�� ������ data
-    output reg [W-1:0] ReadData1, ReadData2, ReadData3;  // Register file���� ���� data
+    input   WriteEn;     
+    input   [W-1:0] WriteData; 
+    output reg [W-1:0] ReadData1, ReadData2, ReadData3;  
     input   ReadEn;
-    input   [M-1:0] ReadReg1, ReadReg2, ReadReg3; // Register file���� ���� �ּ�
-    input   [M-1:0] WriteReg; // Register file���� data�� ������ �ּ�
+    input   [M-1:0] ReadReg1, ReadReg2, ReadReg3; 
+    input   [M-1:0] WriteReg; 
     
-    // �ڵ� �ۼ�
-
     reg [W-1:0] reg_file[0:N-1];
-
+    // READ
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             ReadData1 <= reg_file[ReadReg1];
@@ -30,7 +28,7 @@ WriteReg, WriteEn, WriteData, ReadEn, ReadData1, ReadData2, ReadData3);
             ReadData3 <= reg_file[ReadReg3];
         end
     end
-
+    // Write
     always @(posedge clk) begin
         if(WriteEn) reg_file[WriteReg] <= WriteData;                    
     end

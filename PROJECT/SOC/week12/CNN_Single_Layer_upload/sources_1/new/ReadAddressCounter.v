@@ -13,6 +13,7 @@ clk, rst_n, ReadEn, ReadReg
     wire [14:0] count;
 
     // module RingCounterX3(clk,rst_n, en, count);
+    // addr을 생성 후에 그 값을 encoding
     RingCounterX3 #(Init) X(clk, rst_n, ReadEn, count);
     //module AddressEncoder(AddrIn, AddrOut);
     AddressEncoder A(count, ReadReg);

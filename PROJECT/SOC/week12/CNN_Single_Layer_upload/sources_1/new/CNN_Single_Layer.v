@@ -22,7 +22,7 @@ clk, rst_n, Start, Image, Filter, ReadEn, ConvResult
     wire [3:0] ReadReg1, ReadReg2, ReadReg3;
     wire [7:0] ReadData1, ReadData2, ReadData3;
 
-    Multiplicator Multiplicator (.Start(Start), .din0(Image), .din1(Filter), .dout(MultValue));   // ���� ��� = Partial Sum (PSum)
+    Multiplicator Multiplicator (.Start(Start), .din0(Image), .din1(Filter), .dout(MultValue));   //Partial Sum (PSum)
 
     AddressCounter AddressCounter (.clk(clk), .rst_n(rst_n), .Start(Start), .WriteReg(WriteReg), .ReadEn(ReadEn),
         .ReadReg1(ReadReg1), .ReadReg2(ReadReg2), .ReadReg3(ReadReg3));
