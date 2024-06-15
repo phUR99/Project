@@ -1,49 +1,34 @@
-module adder (
+module adder #(
+    parameter N = 16
+)
+(
     input clk, rst_n, 
-    input [15:0] din1, din2, din3,
-    input [1:0] addr,
-    input enable, endSign_in,
-    output [15:0] writeData,
-    output reg endSign_out
-);
-    reg [15:0] temp[0:8];
-    wire [15:0] result1, result2, result3;
-    reg en;
-    assign writeData = (en) ? result1 + result2 + result3 : 0;
-    reg [15:0] result[0:1023];
-    reg [9:0] addr_reg;
-
-    always @(en) begin
-        result[addr_reg] = writeData;
-        addr_reg = addr_reg + 1;
-    end
-
-
-    assign result1 = temp[0] + temp[1] + temp[2];
-    assign result2 = temp[3] + temp[4] + temp[5];
-    assign result3 = temp[6] + temp[7] + temp[8];
-    
+    input [4:0] row_in, col_in,
+    input [N-1:0] din11, din12, din13, 
+                  din21, din22, din23, 
+                  din31, din32, din33,
+    input done_in,
+    output reg [N-1:0] writeData,
+    output reg done_out,
+    output reg [4:0] row_out, col_out
+);    
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-            en <= 0;
-            endSign_out <= 0;
+            done_out <= 0; row_out <= 0;  col_out <= 0;
         end
         else begin
-            en <= enable;
-            endSign_out <= endSign_in;
+            done_out <= done_in; row_out <= row_in; col_out <= col_in;
         end
     end
 
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
-            temp[addr]   <= 0;
-            temp[addr+3] <= 0;
-            temp[addr+6] <= 0;          
+            writeData <= 0;
         end
         else begin
-            temp[addr]   <= din1;
-            temp[addr+3] <= din2;
-            temp[addr+6] <= din3;    
+            writeData <=  din11 + din12 + din13 +
+                          din21 + din22 + din23 +
+                          din31 + din32 + din33 ;
         end
     end
 endmodule

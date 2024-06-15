@@ -1,58 +1,48 @@
 
-module ringCounter(
-    input clk, rst_n,
-    output reg [2:0] count
-);
-
-always @(posedge clk, negedge rst_n) begin
-    if (!rst_n)
-        count <= 3'b001;
-    else
-        count <= {count[1:0], count[2]};
-end
-
-endmodule
-
-module addrEncoder(
-    input [2:0] count, 
-    output reg [1:0] address,
-    output en
-    );
-    assign en = (count == 3'b100) ? 1 : 0;
-    always @(*) begin
-        case(count)
-            3'b001 :  address = 2'b00;
-            3'b010 :  address = 2'b01;
-            3'b100 :  address = 2'b10;
-            default : address = 2'b11;
-        endcase
-    end
-
-endmodule
-
 module counter(
     input clk, rst_n,
-    input en,
+    input enable,
     input [4:0] value,
     output reg [4:0] out,
     output reg cout
 );
-
-    always @(posedge clk, negedge rst_n) begin
+    always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             out <= 5'b00000;
             cout <= 0;
         end
-        else if (en) begin
+        else if (enable) begin
             if(out == value) begin
                 out <= 5'b00000;            
                 cout <= 1;
             end
             else  begin
                 out <= out + 1;
+                cout <= 0;
             end
-        end
-        else cout <= 0;
+        end        
     end
+
+endmodule
+
+module counterLogic
+(
+    input clk, rst_n,
+    input enable,    
+
+    output [4:0] row_out, col_out,
+    output reg done
+);
+    wire cout1, cout2;
+    parameter index = 29;
+
+
+    always @(posedge clk or negedge rst_n) begin
+        if(!rst_n) done <= 0;
+        else if(row_out == index && col_out == index)
+            done <= 1'b1;
+    end    
+    counter X1(.clk(clk), .rst_n(rst_n), .enable(enable), .value(index), .out(col_out), .cout(cout1));
+    counter X2(.clk(clk), .rst_n(rst_n), .enable(cout1),  .value(index), .out(row_out), .cout(cout2));
 
 endmodule

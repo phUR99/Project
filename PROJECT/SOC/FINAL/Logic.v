@@ -5,8 +5,10 @@ module addrLogic(
     output [1:0] addr,
     output endSign, enable
 );
+
     wire [2:0] count;    
     wire en1, en2, en3;
+
     assign enable = en1;
     assign endSign = ((row==5'b11101) && (col==5'b11101) && enable);
 
@@ -91,4 +93,7 @@ module addLogic (
 
     adder a1(.clk(clk), .rst_n(rst_n), .din1(din1), .din2(din2), 
     .din3(din3), .addr(addr), .enable(enable), .endSign_in(endSign_in), .writeData(writeData), .endSign_out(endSign_out));
+
+
+
 endmodule

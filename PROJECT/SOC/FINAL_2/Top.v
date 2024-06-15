@@ -1,81 +1,203 @@
-
 module Top(
-input clk, rst_n,
-output [15:0] convResult,
-output endSign, enable
-    );
-    /*
-    input clk, rst_n, 
-    output [4:0] row, col,
-    output [1:0] addr,
-    output endSign, enable
-    */
-    wire[4:0] row, col;
-    wire [1:0] addr;
-    wire endSign_uut1, enable_uut1;
-    addrLogic uut1(
+    input clk, rst_n, enable
+
+);
+    wire [4:0] row_1, col_1;
+    wire done_1;
+    counterLogic #(29) c1(
     .clk(clk), .rst_n(rst_n), 
-    .row(row), .col(col), 
-    .addr(addr), 
-    .endSign(endSign_uut1), .enable(enable_uut1));
-    /*
-    input clk, rst_n, endSign_in, enable_in, 
-    input [4:0] row, col,
-    input [1:0] addr_in,    
-    output [7:0] Ival1, Ival2, Ival3, Fval1, Fval2, Fval3,
-    output reg endSign_out, enable_out,
-    output reg [1:0] addr_out
-    */
-    wire [7:0] i1, i2, i3, f1, f2, f3;
-    wire endSign_uut2, enable_uut2;
-    wire [1:0] addr_uut2;
-    RegLogic uut2(
-    .clk(clk), .rst_n(rst_n), .endSign_in(endSign_uut1), .enable_in(enable_uut1),
-    .row(row), .col(col), 
-    .addr_in(addr), 
-    .Ival1(i1), .Ival2(i2), .Ival3(i3), .Fval1(f1), .Fval2(f2), .Fval3(f3),
-    .endSign_out(endSign_uut2), .enable_out(enable_uut2),
-    .addr_out(addr_uut2)
+    .enable(enable), 
+    .row_out(row_1), .col_out(col_1),
+    .done(done_1)
     );
-    /*
-    input clk, rst_n, endSign_in, enable_in,
-    input [1:0] addr_in,
-    input [7:0] Iin1, Iin2, Iin3, 
-    input signed [7:0] Fin1, Fin2, Fin3,
-    output signed [15:0] dout1, dout2, dout3,
-    output reg endSign_out, enable_out,
-    output reg [1:0] addr_out
-    */
-    wire [15:0] d1,d2, d3;
-    wire endSign_uut3, enable_uut3;
-    wire [1:0] addr_uut3;
-    multiplicationLogic uut3(
-    .clk(clk), .rst_n(rst_n), .endSign_in(endSign_uut2), .enable_in(enable_uut2),
-    .addr_in(addr_uut2),
-    .Iin1(i1), .Iin2(i2), .Iin3(i3),
-    .Fin1(f1), .Fin2(f2), .Fin3(f3),
-    .dout1(d1), .dout2(d2), .dout3(d3),
-    .endSign_out(endSign_uut3), .enable_out(enable_uut3),
-    .addr_out(addr_uut3)
+
+    wire [4:0] row_2, col_2;
+    wire done_2;
+    wire [9:0]  i1_ad11, i1_ad12, i1_ad13, 
+                i1_ad21, i1_ad22, i1_ad23, 
+                i1_ad31, i1_ad32, i1_ad33;
+    imageAddrRegister #(32) i1(
+        .clk(clk), .rst_n(rst_n),
+        .col_in(col_1), .row_in(row_1),
+        .done_in(done_1),
+        .done_out(done_2),
+        .col_out(col_2), .row_out(row_2),
+        .ad11(i1_ad11), .ad12(i1_ad12), .ad13(i1_ad13), 
+        .ad21(i1_ad21), .ad22(i1_ad22), .ad23(i1_ad23), 
+        .ad31(i1_ad31), .ad32(i1_ad32), .ad33(i1_ad33)
     );
-    /*
-    input clk, rst_n, 
-    input [15:0] din1, din2, din3,
-    input [1:0] addr,
-    input enable, endSign_in,
-    output [15:0] writeData,
-    output endSign_out
-    */
-    wire [15:0] writeData;
-    wire endSign_uut4, enable_uut4;
-    addLogic uut4(
+    wire [7:0]  i1_val11, i1_val12, i1_val13, 
+                i1_val21, i1_val22, i1_val23, 
+                i1_val31, i1_val32, i1_val33;
+
+    image #(8) i2(
+        .addr11(i1_ad11), .addr12(i1_ad12), .addr13(i1_ad13), 
+        .addr21(i1_ad21), .addr22(i1_ad22), .addr23(i1_ad23), 
+        .addr31(i1_ad31), .addr32(i1_ad32), .addr33(i1_ad33),
+            
+        .val11(i1_val11), .val12(i1_val12), .val13(i1_val13), 
+        .val21(i1_val21), .val22(i1_val22), .val23(i1_val23), 
+        .val31(i1_val31), .val32(i1_val32), .val33(i1_val33)
+    );
+
+    wire [3:0] f1_ad11, f1_ad12, f1_ad13,
+               f1_ad21, f1_ad22, f1_ad23,
+               f1_ad31, f1_ad32, f1_ad33;
+    wire [7:0]  f1_val11, f1_val12, f1_val13, 
+                f1_val21, f1_val22, f1_val23, 
+                f1_val31, f1_val32, f1_val33;
+    filterAddrRegister f1(clk, rst_n,
+            f1_ad11, f1_ad12, f1_ad13,
+            f1_ad21, f1_ad22, f1_ad23,
+            f1_ad31, f1_ad32, f1_ad33
+    );
+    filter f2(
+            f1_ad11, f1_ad12, f1_ad13,
+            f1_ad21, f1_ad22, f1_ad23,
+            f1_ad31, f1_ad32, f1_ad33,
+
+            f1_val11, f1_val12, f1_val13, 
+            f1_val21, f1_val22, f1_val23, 
+            f1_val31, f1_val32, f1_val33
+    );
+
+    wire done_3;
+    wire [4:0] row_3, col_3;
+    wire [15:0]       m1_d11, m1_d12, m1_d13, 
+                      m1_d21, m1_d22, m1_d23, 
+                      m1_d31, m1_d32, m1_d33;
+    multiLogic #(8, 8) m1(row_2, col_2,
+        done_2, clk, rst_n,
+        
+        f1_val11, f1_val12, f1_val13, 
+        f1_val21, f1_val22, f1_val23, 
+        f1_val31, f1_val32, f1_val33,
+
+        i1_val11, i1_val12, i1_val13, 
+        i1_val21, i1_val22, i1_val23, 
+        i1_val31, i1_val32, i1_val33,
+
+        done_3,
+        row_3, col_3,
+
+        m1_d11, m1_d12, m1_d13, 
+        m1_d21, m1_d22, m1_d23, 
+        m1_d31, m1_d32, m1_d33    
+    );
+
+    wire [15:0] conv1_result;
+    wire done_4;
+    wire [4:0] row, col;
+    adder #(16) a1(clk, rst_n,
+        row_3, col_3,
+        m1_d11, m1_d12, m1_d13, 
+        m1_d21, m1_d22, m1_d23, 
+        m1_d31, m1_d32, m1_d33,    
+        done_3,
+        conv1_result,
+        done_4,
+        row, col
+    );
+    wire [4:0] row_5, col_5;
+    wire done_5;
+
+    counterLogic #(26) c2(
     .clk(clk), .rst_n(rst_n), 
-    .din1(d1), .din2(d2), .din3(d3),
-    .addr(addr_uut3), 
-    .enable(enable_uut3), .endSign_in(endSign_uut3),
-    .writeData(convResult),
-    .endSign_out(endSign),    
-    .enable_out(enable)
+    .enable(done_4), 
+    .row_out(row_5), .col_out(col_5),
+    .done(done_5)
+    );
+    wire [4:0] row_6, col_6;
+    wire done_6;
+    wire [9:0]  i3_ad11, i3_ad12, i3_ad13, 
+                i3_ad21, i3_ad22, i3_ad23, 
+                i3_ad31, i3_ad32, i3_ad33;
+
+    imageAddrRegister #(30) i3(
+        .clk(clk), .rst_n(rst_n),
+        .col_in(col_5), .row_in(row_5),
+        .done_in(done_5),
+        .done_out(done_6),
+        .col_out(col_6), .row_out(row_6),
+        .ad11(i3_ad11), .ad12(i3_ad12), .ad13(i3_ad13), 
+        .ad21(i3_ad21), .ad22(i3_ad22), .ad23(i3_ad23), 
+        .ad31(i3_ad31), .ad32(i3_ad32), .ad33(i3_ad33)
+    );
+    wire [15:0] i3_val11, i3_val12, i3_val13, 
+                i3_val21, i3_val22, i3_val23, 
+                i3_val31, i3_val32, i3_val33;
+
+    image_2 #(16) i4(
+        .done(done_5), .clk(clk), .rst_n(rst_n),
+        .col_in(col), .row_in(row),
+        .writeData(conv1_result),
+
+        .addr11(i3_ad11), .addr12(i3_ad12), .addr13(i3_ad13), 
+        .addr21(i3_ad21), .addr22(i3_ad22), .addr23(i3_ad23), 
+        .addr31(i3_ad31), .addr32(i3_ad32), .addr33(i3_ad33),
+            
+        .val11(i3_val11), .val12(i3_val12), .val13(i3_val13), 
+        .val21(i3_val21), .val22(i3_val22), .val23(i3_val23), 
+        .val31(i3_val31), .val32(i3_val32), .val33(i3_val33)
+    );
+
+    wire [3:0]  f3_ad11, f3_ad12, f3_ad13,
+                f3_ad21, f3_ad22, f3_ad23,
+                f3_ad31, f3_ad32, f3_ad33;
+    wire [7:0]  f3_val11, f3_val12, f3_val13, 
+                f3_val21, f3_val22, f3_val23, 
+                f3_val31, f3_val32, f3_val33;
+
+    filterAddrRegister f3(clk, rst_n,
+                f3_ad11, f3_ad12, f3_ad13,
+                f3_ad21, f3_ad22, f3_ad23,
+                f3_ad31, f3_ad32, f3_ad33
+    );
+    filter f4(
+                f3_ad11, f3_ad12, f3_ad13,
+                f3_ad21, f3_ad22, f3_ad23,
+                f3_ad31, f3_ad32, f3_ad33,
+
+                f3_val11, f3_val12, f3_val13, 
+                f3_val21, f3_val22, f3_val23, 
+                f3_val31, f3_val32, f3_val33
+    );
+
+    wire done_7;
+    wire [4:0] row_7, col_7;
+    wire [31:0]       m3_d11, m3_d12, m3_d13, 
+                      m3_d21, m3_d22, m3_d23, 
+                      m3_d31, m3_d32, m3_d33;
+    multiLogic_2 #(8, 16) m3(row_6, col_6,
+        done_6, clk, rst_n,
+        
+        f3_val11, f3_val12, f3_val13, 
+        f3_val21, f3_val22, f3_val23, 
+        f3_val31, f3_val32, f3_val33,
+
+        i3_val11, i3_val12, i3_val13, 
+        i3_val21, i3_val22, i3_val23, 
+        i3_val31, i3_val32, i3_val33,
+
+        done_7,
+        row_7, col_7,
+
+        m3_d11, m3_d12, m3_d13, 
+        m3_d21, m3_d22, m3_d23, 
+        m3_d31, m3_d32, m3_d33    
+    );
+    wire done_8;
+    wire [31:0] conv2_result;
+    wire [4:0] row2, col2;
+    adder #(32) a2(clk, rst_n,
+        row_7, col_7,
+        m3_d11, m3_d12, m3_d13, 
+        m3_d21, m3_d22, m3_d23, 
+        m3_d31, m3_d32, m3_d33,    
+        done_7,
+        conv2_result,
+        done_8,
+        row2, col2
     );
 
 endmodule
