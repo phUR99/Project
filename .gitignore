@@ -6,3 +6,6 @@ yolov5/
 /yolov5-opencv-cpp-python
 .cph/
 .vscode/
+*.txt
+*.exe
+*.bin
