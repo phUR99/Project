@@ -9,5 +9,6 @@ yolov5/
 *.txt
 *.exe
 *.bin
+*.o
 SWEA특강/
 cp.cpp
