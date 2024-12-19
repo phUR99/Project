@@ -26,13 +26,14 @@ public class CatDogMouse {
 	static final char EXITCHAR = 'H';
 	static final char WHIPCHAR = 'W';
 	static final char CHEESECHAR = 'O';
+	static final char STIMPACKCHAR = 'S';
 
 	// The name of the high score file
 	static String HIGHSCOREFILE = "CatAndDogAndMouseHighScore.txt";
 
 	// If this is the first time you run the program, this is the high score
 	static final int STARTHIGHSCORE = 0;
-
+	static final int HARD = 84;
 	// Define the size of an obstacle free center region
 	// This also defines the region where the cat must start
 	// And where no dogs can start
@@ -55,11 +56,11 @@ public class CatDogMouse {
 	// It is a 2 dimensional array of characters
 	static House house;
 	//
-	static boolean charm, power;
+	static boolean charm, power, stimpack;
 	// This is the count of how many dogs and mice are currently in the house
 	static int numDogs;
 	static int numMice;
-
+	static int cnt;
 	// This variable contains the location of the player
 	static Animal player;
 
@@ -72,7 +73,7 @@ public class CatDogMouse {
 	// This variable contains the location of the up and down stairs
 	static HouseObject upStairs, downStairs;
 
-	static HouseObject whip, cheese;
+	static HouseObject whip, cheese, pack;
 	// This variable contains the location of the exit
 	static HouseObject houseExit;
 
@@ -83,7 +84,7 @@ public class CatDogMouse {
 	static int miceRemoved;
 
 	// This is your high score, which is the tallest house you have reached so far
-	static int highScore;
+	static int highScore, difficulty = 0;
 
 	// Random number generator
 	static Random randomNum;
@@ -109,8 +110,14 @@ public class CatDogMouse {
 				house.getHouseNumber(), house.getFloorNumber(), highScore);
 		System.out.printf("Mice Carried:%d Mice Removed:%d\n",
 				miceCarried, miceRemoved);
-
-		System.out.printf("Charm:%s Power:%s\n", (charm ? "YES" : "NO"), (power ? "YES" : "NO"));
+		System.out.printf("Charm:%s Power:%s Stimpack:%s \n",
+				(charm ? "YES" : "NO"),
+				(power ? "YES" : "NO"),
+				(stimpack ? "YES" : "NO"));
+		if (isHard()) {
+			System.out.printf("***********warning***********\n");
+		} else
+			System.out.println();
 		System.out.printf("==============================\n");
 	}
 
@@ -130,6 +137,7 @@ public class CatDogMouse {
 		System.out.printf("Helicopter = %c\n", EXITCHAR);
 		System.out.printf("Cheese = %c\n", CHEESECHAR);
 		System.out.printf("Whip = %c\n", WHIPCHAR);
+		System.out.printf("Stimpack = %c\n", STIMPACKCHAR);
 		System.out.printf("\n");
 
 	}
@@ -442,6 +450,17 @@ public class CatDogMouse {
 		return cheeseLocation(myLocation.getX(), myLocation.getY());
 	}
 
+	public static boolean stimpackLocation(int x, int y) {
+		if (x == pack.getX() && y == pack.getY()) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean stimpackLocation(Location myLocation) {
+		return stimpackLocation(myLocation.getX(), myLocation.getY());
+	}
+
 	public static void initializeStairsAndExit() {
 		houseExit.setXY(-1, -1);
 		upStairs.setXY(-1, -1);
@@ -496,6 +515,7 @@ public class CatDogMouse {
 		house.chooseEmptyLocation(myLocation, randomNum);
 		whip.setLocation(myLocation);
 		house.setChar(myLocation.getX(), myLocation.getY(), WHIPCHAR);
+		power = false;
 
 	}
 
@@ -505,7 +525,17 @@ public class CatDogMouse {
 		house.chooseEmptyLocation(myLocation, randomNum);
 		cheese.setLocation(myLocation);
 		house.setChar(myLocation.getX(), myLocation.getY(), CHEESECHAR);
+		charm = false;
 
+	}
+
+	public static void addPack() {
+		Location myLocation = new Location();
+
+		house.chooseEmptyLocation(myLocation, randomNum);
+		pack.setLocation(myLocation);
+		house.setChar(myLocation.getX(), myLocation.getY(), STIMPACKCHAR);
+		stimpack = false;
 	}
 	/////////////////////////////////////////////////////////////////////////
 	//
@@ -725,7 +755,8 @@ public class CatDogMouse {
 				house.getChar(nxtX, nxtY) == EXITCHAR ||
 				house.getChar(nxtX, nxtY) == MOUSECHAR ||
 				house.getChar(nxtX, nxtY) == CHEESECHAR ||
-				house.getChar(nxtX, nxtY) == WHIPCHAR)
+				house.getChar(nxtX, nxtY) == WHIPCHAR ||
+				house.getChar(nxtX, nxtY) == STIMPACKCHAR)
 			changePlayerLocation(nxtX, nxtY);
 
 	}
@@ -741,6 +772,12 @@ public class CatDogMouse {
 
 		for (i = 0; i < numDogs; i++) {
 			dogs[i].moveDog(power);
+			if (!isHard())
+				continue;
+			boolean coin = randomNum.nextBoolean();
+			if (coin)
+				dogs[i].moveDog(power);
+
 		}
 	}
 
@@ -786,6 +823,14 @@ public class CatDogMouse {
 	public static void pickUpWhip() {
 		power = true;
 	}
+
+	public static void useStimpack() {
+		stimpack = true;
+	}
+
+	public static boolean isHard() {
+		return difficulty >= HARD;
+	}
 	/////////////////////////////////////////////////////////////////////////
 	//
 	// This function moves the player and the dogs and the mice.
@@ -794,13 +839,24 @@ public class CatDogMouse {
 
 	public static void movePlayerAndDogsAndMice(char directionChar) {
 		// Move the mouse only if we are in house 3 or later
-		if (house.getHouseNumber() >= 3 || charm)
-			moveAllMice();
+		if (!stimpack || (stimpack && cnt == 1)) {
+			if (house.getHouseNumber() >= 3 || charm)
+				moveAllMice();
+		}
 		// Move the player according to the direction entered
 		movePlayer(directionChar);
 		collectMouse();
+		if (!stimpack) {
+			moveAllDogs();
+		} else {
+			if (cnt == 1)
+				moveAllDogs();
+		}
 		// Move the dogs and mouse according to their moving strategy
-		moveAllDogs();
+
+		if (stimpack)
+			cnt++;
+		cnt %= 2;
 
 	}
 
@@ -816,8 +872,11 @@ public class CatDogMouse {
 		// Increase the size of the house
 		house.changeHouseSize(house.getHouseSize() - house.getSizeIncrement());
 		// Add one dog for the next level
-		if (numDogs < MAXDOGS)
-			numDogs++;
+		if (isHard()) {
+			numDogs = Math.min(MAXDOGS - 1, 2 + numDogs);
+		} else
+			numDogs = Math.min(MAXDOGS - 1, 1 + numDogs);
+
 		// If we have not visited this level yet, then add mice
 		if (house.getMaxFloorReached() < house.getFloorNumber()) {
 			house.setMaxFloorReached(house.getFloorNumber());
@@ -841,7 +900,10 @@ public class CatDogMouse {
 		// Decrease the size of the house
 		house.changeHouseSize(house.getHouseSize() + house.getSizeIncrement());
 		// Remove one dog for the next level
-		numDogs--;
+		if (isHard()) {
+			numDogs -= 2;
+		} else
+			numDogs--;
 
 		numMice = 0;
 	}
@@ -918,6 +980,7 @@ public class CatDogMouse {
 	public static void startHouseNumber(int number) {
 		house.startHouse(number);
 		// Start each house with 1 dog
+
 		numDogs = 1;
 		// Start each house with the same amount of mice as the house number
 		numMice = house.getHouseNumber();
@@ -929,6 +992,10 @@ public class CatDogMouse {
 		// Update the high score with the new mice removed
 		checkAndUpdateHighScore();
 
+	}
+
+	public static void setDifficulty() {
+		difficulty = randomNum.nextInt(100);
 	}
 
 	/////////////////////////////////////////////////////////////////////////
@@ -954,8 +1021,11 @@ public class CatDogMouse {
 		houseExit = new HouseObject();
 		whip = new HouseObject();
 		cheese = new HouseObject();
+		pack = new HouseObject();
 		charm = false;
 		power = false;
+		stimpack = false;
+		cnt = 0;
 	}
 
 	///////////////////
@@ -988,7 +1058,6 @@ public class CatDogMouse {
 			// Build walls and obstacles in the house
 			house.buildWalls();
 			house.buildObstacles(randomNum);
-
 			// Add the dogs, mice, cat, exit, and stairs to the house
 			addManyDogs();
 			addManyMice();
@@ -996,6 +1065,7 @@ public class CatDogMouse {
 			addExitandStairs();
 			addCheese();
 			addWhip();
+			addPack();
 			// Stay in this house until the player reaches a stairs
 			while (true) {
 
@@ -1026,16 +1096,14 @@ public class CatDogMouse {
 				// If the player is reached the up stairs, climb up
 				if (upStairsLocation(player.getLocation())) {
 					climbUpStairs();
-					charm = false;
-					power = false;
+					setDifficulty();
 					break;
 				}
 
 				// If the player is reached the down stairs, climb down
 				if (downStairsLocation(player.getLocation())) {
 					climbDownStairs();
-					charm = false;
-					power = false;
+					setDifficulty();
 					break;
 				}
 				if (cheeseLocation(player.getLocation())) {
@@ -1043,6 +1111,9 @@ public class CatDogMouse {
 				}
 				if (whipLocation(player.getLocation())) {
 					pickUpWhip();
+				}
+				if (stimpackLocation(player.getLocation())) {
+					useStimpack();
 				}
 				// If the player wins then break out of the house
 				// and advance to the next house
@@ -1053,8 +1124,7 @@ public class CatDogMouse {
 					pause();
 
 					startHouseNumber(house.getHouseNumber() + 1);
-					charm = false;
-					power = false;
+					setDifficulty();
 					break;
 				}
 

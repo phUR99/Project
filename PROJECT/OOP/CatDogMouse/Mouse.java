@@ -99,7 +99,7 @@ public class Mouse extends Animal {
 				newX--;
 			}
 		}
-		System.out.println("Hi");
+		// System.out.println("Hi");
 
 		if (house.emptyLocation(newX, newY) ||
 				CatDogMouse.playerLocation(newX, newY)) {
