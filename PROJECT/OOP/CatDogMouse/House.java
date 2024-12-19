@@ -15,7 +15,7 @@ public class House {
 	// This is the starting floor of the house
 	static final int MINFLOOR = 1;
 
-	static final char OBSTACLECHAR = '.';
+	static final char OBSTACLECHAR = 'X';
 
 	// Define the size of an obstacle free center region
 	// This also defines the region where the cat must start

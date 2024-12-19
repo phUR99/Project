@@ -17,13 +17,15 @@ public class CatDogMouse {
 	static final int MAXMICE = 20;
 
 	// A location in the house can contain an obsatcle, player, dog or mouse
-	static final char OBSTACLECHAR = '.';
+	static final char OBSTACLECHAR = 'X';
 	static final char CATCHAR = 'C';
 	static final char DOGCHAR = 'D';
 	static final char MOUSECHAR = 'M';
 	static final char UPCHAR = '^';
 	static final char DOWNCHAR = 'v';
 	static final char EXITCHAR = 'H';
+	static final char WHIPCHAR = 'W';
+	static final char CHEESECHAR = 'O';
 
 	// The name of the high score file
 	static String HIGHSCOREFILE = "CatAndDogAndMouseHighScore.txt";
@@ -52,7 +54,8 @@ public class CatDogMouse {
 	// This is the house variable
 	// It is a 2 dimensional array of characters
 	static House house;
-
+	//
+	static boolean charm, power;
 	// This is the count of how many dogs and mice are currently in the house
 	static int numDogs;
 	static int numMice;
@@ -69,6 +72,7 @@ public class CatDogMouse {
 	// This variable contains the location of the up and down stairs
 	static HouseObject upStairs, downStairs;
 
+	static HouseObject whip, cheese;
 	// This variable contains the location of the exit
 	static HouseObject houseExit;
 
@@ -105,6 +109,8 @@ public class CatDogMouse {
 				house.getHouseNumber(), house.getFloorNumber(), highScore);
 		System.out.printf("Mice Carried:%d Mice Removed:%d\n",
 				miceCarried, miceRemoved);
+
+		System.out.printf("Charm:%s Power:%s\n", (charm ? "YES" : "NO"), (power ? "YES" : "NO"));
 		System.out.printf("==============================\n");
 	}
 
@@ -122,6 +128,8 @@ public class CatDogMouse {
 		System.out.printf("Up Stairs = %c\n", UPCHAR);
 		System.out.printf("Down Stairs = %c\n", DOWNCHAR);
 		System.out.printf("Helicopter = %c\n", EXITCHAR);
+		System.out.printf("Cheese = %c\n", CHEESECHAR);
+		System.out.printf("Whip = %c\n", WHIPCHAR);
 		System.out.printf("\n");
 
 	}
@@ -412,6 +420,27 @@ public class CatDogMouse {
 	// This funcation starts by putting the stairs and the exit outside the house
 	//
 	/////////////////////////////////////////////////////////////////////////
+	public static boolean whipLocation(int x, int y) {
+		if (x == whip.getX() && y == whip.getY()) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean whipLocation(Location myLocation) {
+		return whipLocation(myLocation.getX(), myLocation.getY());
+	}
+
+	public static boolean cheeseLocation(int x, int y) {
+		if (x == cheese.getX() && y == cheese.getY()) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean cheeseLocation(Location myLocation) {
+		return cheeseLocation(myLocation.getX(), myLocation.getY());
+	}
 
 	public static void initializeStairsAndExit() {
 		houseExit.setXY(-1, -1);
@@ -461,6 +490,23 @@ public class CatDogMouse {
 		house.setChar(myLocation.getX(), myLocation.getY(), DOWNCHAR);
 	}
 
+	public static void addWhip() {
+		Location myLocation = new Location();
+
+		house.chooseEmptyLocation(myLocation, randomNum);
+		whip.setLocation(myLocation);
+		house.setChar(myLocation.getX(), myLocation.getY(), WHIPCHAR);
+
+	}
+
+	public static void addCheese() {
+		Location myLocation = new Location();
+
+		house.chooseEmptyLocation(myLocation, randomNum);
+		cheese.setLocation(myLocation);
+		house.setChar(myLocation.getX(), myLocation.getY(), CHEESECHAR);
+
+	}
 	/////////////////////////////////////////////////////////////////////////
 	//
 	// This funcation adds an exit and stairs to the house if necessary
@@ -677,7 +723,9 @@ public class CatDogMouse {
 				house.getChar(nxtX, nxtY) == UPCHAR ||
 				house.getChar(nxtX, nxtY) == DOWNCHAR ||
 				house.getChar(nxtX, nxtY) == EXITCHAR ||
-				house.getChar(nxtX, nxtY) == MOUSECHAR)
+				house.getChar(nxtX, nxtY) == MOUSECHAR ||
+				house.getChar(nxtX, nxtY) == CHEESECHAR ||
+				house.getChar(nxtX, nxtY) == WHIPCHAR)
 			changePlayerLocation(nxtX, nxtY);
 
 	}
@@ -692,7 +740,7 @@ public class CatDogMouse {
 		int i;
 
 		for (i = 0; i < numDogs; i++) {
-			dogs[i].moveDog();
+			dogs[i].moveDog(power);
 		}
 	}
 
@@ -706,7 +754,7 @@ public class CatDogMouse {
 
 		int i;
 		for (i = 0; i < numMice; i++) {
-			mice[i].moveMouse();
+			mice[i].moveMouse(charm);
 		}
 
 	}
@@ -731,6 +779,13 @@ public class CatDogMouse {
 
 	}
 
+	public static void eatCheese() {
+		charm = true;
+	}
+
+	public static void pickUpWhip() {
+		power = true;
+	}
 	/////////////////////////////////////////////////////////////////////////
 	//
 	// This function moves the player and the dogs and the mice.
@@ -739,7 +794,7 @@ public class CatDogMouse {
 
 	public static void movePlayerAndDogsAndMice(char directionChar) {
 		// Move the mouse only if we are in house 3 or later
-		if (house.getHouseNumber() >= 0)
+		if (house.getHouseNumber() >= 3 || charm)
 			moveAllMice();
 		// Move the player according to the direction entered
 		movePlayer(directionChar);
@@ -897,6 +952,10 @@ public class CatDogMouse {
 		upStairs = new HouseObject();
 		downStairs = new HouseObject();
 		houseExit = new HouseObject();
+		whip = new HouseObject();
+		cheese = new HouseObject();
+		charm = false;
+		power = false;
 	}
 
 	///////////////////
@@ -935,7 +994,8 @@ public class CatDogMouse {
 			addManyMice();
 			addPlayer();
 			addExitandStairs();
-
+			addCheese();
+			addWhip();
 			// Stay in this house until the player reaches a stairs
 			while (true) {
 
@@ -966,15 +1026,24 @@ public class CatDogMouse {
 				// If the player is reached the up stairs, climb up
 				if (upStairsLocation(player.getLocation())) {
 					climbUpStairs();
+					charm = false;
+					power = false;
 					break;
 				}
 
 				// If the player is reached the down stairs, climb down
 				if (downStairsLocation(player.getLocation())) {
 					climbDownStairs();
+					charm = false;
+					power = false;
 					break;
 				}
-
+				if (cheeseLocation(player.getLocation())) {
+					eatCheese();
+				}
+				if (whipLocation(player.getLocation())) {
+					pickUpWhip();
+				}
 				// If the player wins then break out of the house
 				// and advance to the next house
 				if (houseFinished()) {
@@ -984,7 +1053,8 @@ public class CatDogMouse {
 					pause();
 
 					startHouseNumber(house.getHouseNumber() + 1);
-
+					charm = false;
+					power = false;
 					break;
 				}
 

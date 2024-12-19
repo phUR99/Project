@@ -83,14 +83,21 @@ public class Mouse extends Animal {
 	//
 	/////////////////////////////////////////////////////////////////////////
 
-	public boolean moveNS() {
+	public boolean moveNS(boolean state) {
 		int newX = this.getX();
 		int newY = this.getY();
-
-		if (newX < player.getX()) {
-			newX--;
-		} else if (newX > player.getX()) {
-			newX++;
+		if (!state) {
+			if (newX < player.getX()) {
+				newX--;
+			} else if (newX > player.getX()) {
+				newX++;
+			}
+		} else {
+			if (newX < player.getX()) {
+				newX++;
+			} else if (newX > player.getX()) {
+				newX--;
+			}
 		}
 		System.out.println("Hi");
 
@@ -114,14 +121,21 @@ public class Mouse extends Animal {
 	//
 	/////////////////////////////////////////////////////////////////////////
 
-	public boolean moveEW() {
+	public boolean moveEW(boolean state) {
 		int newX = this.getX();
 		int newY = this.getY();
-
-		if (newY < player.getY()) {
-			newY--;
-		} else if (newY > player.getY()) {
-			newY++;
+		if (!state) {
+			if (newY < player.getY()) {
+				newY--;
+			} else if (newY > player.getY()) {
+				newY++;
+			}
+		} else {
+			if (newY < player.getY()) {
+				newY++;
+			} else if (newY > player.getY()) {
+				newY--;
+			}
 		}
 
 		if (house.emptyLocation(newX, newY) ||
@@ -146,13 +160,13 @@ public class Mouse extends Animal {
 	//
 	/////////////////////////////////////////////////////////////////////////
 
-	public boolean moveOnAxis(int axis) {
+	public boolean moveOnAxis(int axis, boolean state) {
 		boolean moved = false;
 
 		if (axis == NORTHSOUTH) {
-			moved = moveNS();
+			moved = moveNS(state);
 		} else if (axis == EASTWEST) {
-			moved = moveEW();
+			moved = moveEW(state);
 		}
 
 		return moved;
@@ -169,21 +183,21 @@ public class Mouse extends Animal {
 	//
 	/////////////////////////////////////////////////////////////////////////
 
-	public void moveMouse() {
+	public void moveMouse(boolean state) {
 		boolean moved;
 		int axis;
 
 		// Choose the vertical or horizontal axis at random
 		axis = randomNum.nextInt(2);
 
-		moved = moveOnAxis(axis);
+		moved = moveOnAxis(axis, state);
 
 		// If the Mouse was not successfully moved
 		// try again in the other direction
 		if (!moved) {
 			axis++;
 			axis %= 2;
-			moveOnAxis(axis);
+			moveOnAxis(axis, state);
 		}
 	}
 
