@@ -10,3 +10,5 @@ When consumed, attracts rats.
 4_2. Additional dogs and rats are introduced.
 4_3. Dogs may move 2 tiles per turn with a probability(50% chance).
 4_4. If it is Hard Mode, a warning message will appear at the top.
+5. Trap
+When consumed, the player cannot move for 3 turns.

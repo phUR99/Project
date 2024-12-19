@@ -27,7 +27,7 @@ public class CatDogMouse {
 	static final char WHIPCHAR = 'W';
 	static final char CHEESECHAR = 'O';
 	static final char STIMPACKCHAR = 'S';
-
+	static final char TRAPCHAR = 'T';
 	// The name of the high score file
 	static String HIGHSCOREFILE = "CatAndDogAndMouseHighScore.txt";
 
@@ -61,6 +61,7 @@ public class CatDogMouse {
 	static int numDogs;
 	static int numMice;
 	static int cnt;
+	static int trapCnt;
 	// This variable contains the location of the player
 	static Animal player;
 
@@ -73,7 +74,7 @@ public class CatDogMouse {
 	// This variable contains the location of the up and down stairs
 	static HouseObject upStairs, downStairs;
 
-	static HouseObject whip, cheese, pack;
+	static HouseObject whip, cheese, pack, trap;
 	// This variable contains the location of the exit
 	static HouseObject houseExit;
 
@@ -110,10 +111,11 @@ public class CatDogMouse {
 				house.getHouseNumber(), house.getFloorNumber(), highScore);
 		System.out.printf("Mice Carried:%d Mice Removed:%d\n",
 				miceCarried, miceRemoved);
-		System.out.printf("Charm:%s Power:%s Stimpack:%s \n",
+		System.out.printf("Charm:%s Power:%s Stimpack:%s Trap!: %d\n",
 				(charm ? "YES" : "NO"),
 				(power ? "YES" : "NO"),
-				(stimpack ? "YES" : "NO"));
+				(stimpack ? "YES" : "NO"),
+				trapCnt);
 		if (isHard()) {
 			System.out.printf("***********warning***********\n");
 		} else
@@ -461,6 +463,17 @@ public class CatDogMouse {
 		return stimpackLocation(myLocation.getX(), myLocation.getY());
 	}
 
+	public static boolean trapLocation(int x, int y) {
+		if (x == trap.getX() && y == trap.getY()) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean trapLocation(Location myLocation) {
+		return trapLocation(myLocation.getX(), myLocation.getY());
+	}
+
 	public static void initializeStairsAndExit() {
 		houseExit.setXY(-1, -1);
 		upStairs.setXY(-1, -1);
@@ -536,6 +549,15 @@ public class CatDogMouse {
 		pack.setLocation(myLocation);
 		house.setChar(myLocation.getX(), myLocation.getY(), STIMPACKCHAR);
 		stimpack = false;
+	}
+
+	public static void addTrap() {
+		Location myLocation = new Location();
+
+		house.chooseEmptyLocation(myLocation, randomNum);
+		trap.setLocation(myLocation);
+		house.setChar(myLocation.getX(), myLocation.getY(), TRAPCHAR);
+		trapCnt = 0;
 	}
 	/////////////////////////////////////////////////////////////////////////
 	//
@@ -718,7 +740,6 @@ public class CatDogMouse {
 	/////////////////////////////////////////////////////////////////////////
 
 	public static void movePlayer(char directionChar) {
-
 		/////////////////////////
 		// Write This Function //
 		/////////////////////////
@@ -756,7 +777,8 @@ public class CatDogMouse {
 				house.getChar(nxtX, nxtY) == MOUSECHAR ||
 				house.getChar(nxtX, nxtY) == CHEESECHAR ||
 				house.getChar(nxtX, nxtY) == WHIPCHAR ||
-				house.getChar(nxtX, nxtY) == STIMPACKCHAR)
+				house.getChar(nxtX, nxtY) == STIMPACKCHAR ||
+				house.getChar(nxtX, nxtY) == TRAPCHAR)
 			changePlayerLocation(nxtX, nxtY);
 
 	}
@@ -828,6 +850,11 @@ public class CatDogMouse {
 		stimpack = true;
 	}
 
+	public static void isTrapped() {
+		trapCnt++;
+		trapCnt %= 3;
+	}
+
 	public static boolean isHard() {
 		return difficulty >= HARD;
 	}
@@ -844,7 +871,9 @@ public class CatDogMouse {
 				moveAllMice();
 		}
 		// Move the player according to the direction entered
-		movePlayer(directionChar);
+		if (trapCnt == 0) {
+			movePlayer(directionChar);
+		}
 		collectMouse();
 		if (!stimpack) {
 			moveAllDogs();
@@ -1022,9 +1051,11 @@ public class CatDogMouse {
 		whip = new HouseObject();
 		cheese = new HouseObject();
 		pack = new HouseObject();
+		trap = new HouseObject();
 		charm = false;
 		power = false;
 		stimpack = false;
+		trapCnt = 2;
 		cnt = 0;
 	}
 
@@ -1045,16 +1076,6 @@ public class CatDogMouse {
 
 		// Loop until the player wins, loses, or quits
 		while (true) {
-			///////////////////////////////////////
-
-			/*
-			 * try {
-			 * new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-			 * } catch (Exception e) {
-			 * e.printStackTrace();
-			 * }
-			 */
-			////////////////////////////////////////
 			// Build walls and obstacles in the house
 			house.buildWalls();
 			house.buildObstacles(randomNum);
@@ -1066,6 +1087,7 @@ public class CatDogMouse {
 			addCheese();
 			addWhip();
 			addPack();
+			addTrap();
 			// Stay in this house until the player reaches a stairs
 			while (true) {
 
@@ -1114,6 +1136,9 @@ public class CatDogMouse {
 				}
 				if (stimpackLocation(player.getLocation())) {
 					useStimpack();
+				}
+				if (trapLocation(player.getLocation())) {
+					isTrapped();
 				}
 				// If the player wins then break out of the house
 				// and advance to the next house
