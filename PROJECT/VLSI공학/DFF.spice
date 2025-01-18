@@ -1,0 +1,154 @@
+* SPICE3 file created from /home/hw3/DFF.ext - technology: scmos
+********************** transistor tech file ****************************
+.include mosfet.txt
+*************************************************************************
+
+************* Define the input signal info. *****************************
+.PARAM	bitrate1=0.025G
+	+freq1='bitrate1/2'
+	+per1='1/freq1'
+	+td1= 0
+	+tr1='per1*0.2'
+	+tf1='per1*0.2'
+	+pw1='per1*0.4'
+
+
+.PARAM	bitrate2=0.1G
+	+freq2='bitrate2/2'
+	+per2='1/freq2'
+	+td2=0
+	+tr2=0
+	+tf2=0
+	+pw2='per2*0.4'
+
+Vin1	D	0	pulse(0 3.3 td1 tr1 tf1 pw1 per1 )
+Vin2	clk	0	pulse(0 3.3 td2 tr2 tf2 pw2 per2 )
+*************************************************************************
+
+************* Define the Vdd and Vss voltage level***********************
+Vdd	vdd	0	DC	3.3v
+*************************************************************************
+
+************* Your Circuits *********************************************
+X1	D	clk	out1	out2      vdd	0      dff
+*************************************************************************
+
+************* Subcircuits ***********************************************
+.subckt	dff	D	clk     out1	out2	vdd	gnd
+
+M1000 out2 out1 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=180p ps=234u 
+M1001 vdd n7 out2 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1002 nand2_3/a_1_n26# out1 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=85p ps=113u 
+M1003 out2 n7 nand2_3/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1004 out1 n6 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1005 vdd out2 out1 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1006 nand2_1/a_1_n26# n6 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1007 out1 out2 nand2_1/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1008 n7 n5 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1009 vdd bclk n7 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1010 nand2_2/a_1_n26# n5 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1011 n7 bclk nand2_2/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1012 n6 n4 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1013 vdd bclk n6 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1014 nand2_0/a_1_n26# n4 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1015 n6 bclk nand2_0/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1016 bclk clk vdd vdd PMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+M1017 bclk clk gnd gnd NMOS w=2u l=1.5u
++ ad=5p pd=9u as=0p ps=0u 
+
+M1018 n5 n4 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1019 vdd n3 n5 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1020 nand2_7/a_1_n26# n4 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1021 n5 n3 nand2_7/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1022 n4 n2 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1023 vdd n5 n4 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1024 nand2_6/a_1_n26# n2 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1025 n4 n5 nand2_6/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1026 n3 n1 vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1027 vdd clk n3 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1028 nand2_5/a_1_n26# n1 gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1029 n3 clk nand2_5/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1030 n2 D vdd vdd PMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1031 vdd clk n2 vdd PMOS w=4u l=1.5u
++ ad=0p pd=0u as=0p ps=0u 
+M1032 nand2_4/a_1_n26# D gnd gnd NMOS w=4u l=1.5u
++ ad=12p pd=14u as=0p ps=0u 
+M1033 n2 clk nand2_4/a_1_n26# gnd NMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+
+M1034 n1 D vdd vdd PMOS w=4u l=1.5u
++ ad=10p pd=13u as=0p ps=0u 
+M1035 n1 D gnd1 gnd NMOS w=2u l=1.5u
++ ad=5p pd=9u as=5p ps=9u 
+C0 vdd clk 2.1fF
+C1 vdd n4 2.2fF
+C2 n4 n5 4.4fF
+C3 vdd n6 2.4fF
+C4 vdd n5 2.2fF
+C5 gnd1 gnd 3.4fF
+C6 D gnd 10.9fF
+C7 n1 gnd 11.5fF
+C8 n2 gnd 10.9fF
+C9 n5 gnd 23.4fF
+C10 n3 gnd 12.5fF
+C11 n4 gnd 30.6fF
+C12 clk gnd 23.8fF
+C13 bclk gnd 15.8fF
+C14 n6 gnd 16.5fF
+C15 out2 gnd 12.0fF
+C16 n7 gnd 13.0fF
+C17 out1 gnd 7.9fF
+C18 vdd gnd 359.5fF
+.ends
+*************************************************************************
+
+************* Define the resoltion and simulation time ******************
+.tran 3p 150n
+*************************************************************************
+
+************* Plot the results ******************************************
+.control
+run
+plot	v(clk) v(D)
+plot	v(out2) v(out1)
+.endc
+*************************************************************************
+
+.end
