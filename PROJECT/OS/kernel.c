@@ -4,16 +4,24 @@ typedef unsigned char uint8_t;
 typedef unsigned int uint32_t;
 typedef uint32_t size_t;
 
-extern char __bss[], __bss_end[], __stack_top[];
+extern char __bss[], __bss_end[];
+extern char __stack_top[];
 extern char __free_ram[], __free_ram_end[];
 extern char __kernel_base[];
 extern char _binary_shell_bin_start[], _binary_shell_bin_size[];
 
 struct process procs[PROCS_MAX];
-struct process *proc_a;
-struct process *proc_b;
 struct process *current_proc;
 struct process *idle_proc;
+
+void kernel_entry(void);
+void yield(void);
+struct process *create_process(const void *image, size_t image_size);
+void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags);
+void user_entry(void);
+void handle_syscall(struct trap_frame *f);
+void handle_trap(struct trap_frame *f);
+long getchar(void);
 
 paddr_t alloc_pages(uint32_t n)
 {
@@ -23,6 +31,7 @@ paddr_t alloc_pages(uint32_t n)
 
 	if (next_paddr > (paddr_t)__free_ram_end)
 		PANIC("out of memory");
+	
 	memset((void *)paddr, 0, n * PAGE_SIZE);
 	return paddr;
 }
@@ -30,11 +39,11 @@ paddr_t alloc_pages(uint32_t n)
 struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4, long arg5, long fid, long eid)
 {
 	register long a0 __asm__("a0") = arg0;
-	register long a1 __asm__("a1") = arg0;
-	register long a2 __asm__("a2") = arg0;
-	register long a3 __asm__("a3") = arg0;
-	register long a4 __asm__("a4") = arg0;
-	register long a5 __asm__("a5") = arg0;
+	register long a1 __asm__("a1") = arg1;
+	register long a2 __asm__("a2") = arg2;
+	register long a3 __asm__("a3") = arg3;
+	register long a4 __asm__("a4") = arg4;
+	register long a5 __asm__("a5") = arg5;
 	register long a6 __asm__("a6") = fid;
 	register long a7 __asm__("a7") = eid;
 
@@ -50,14 +59,6 @@ void putchar(char ch)
 {
 	sbi_call(ch, 0, 0, 0, 0, 0, 0, 1);
 }
-
-void kernel_entry(void);
-void proc_a_entry(void);
-void proc_b_entry(void);
-void yield(void);
-struct process *create_process(const void *image, size_t image_size);
-void map_page(uint32_t *table1, uint32_t vaddr, paddr_t paddr, uint32_t flags);
-void user_entry(void);
 
 void kernel_main(void)
 {
@@ -77,18 +78,19 @@ void kernel_main(void)
 }
 
 __attribute((section(".text.boot")))
-__attribute((naked)) void
-boot(void)
+__attribute((naked)) 
+void boot(void)
 {
 	__asm__ __volatile__(
 		"mv sp, %[stack_top]\n"
 		"j kernel_main\n"
 		:
-		: [stack_top] "r"(__stack_top));
+		: [stack_top] "r"(__stack_top)
+	);
 }
 __attribute__((naked))
-__attribute__((aligned(4))) void
-kernel_entry(void)
+__attribute__((aligned(4))) 
+void kernel_entry(void)
 {
 	__asm__ __volatile__(
 		"csrrw sp, sscratch, sp\n"
@@ -104,7 +106,7 @@ kernel_entry(void)
 		"sw t4, 4 * 7(sp)\n"
 		"sw t5, 4 * 8(sp)\n"
 		"sw t6, 4 * 9(sp)\n"
-		"sw t0, 4 * 10(sp)\n"
+		"sw a0, 4 * 10(sp)\n"
 		"sw a1, 4 * 11(sp)\n"
 		"sw a2, 4 * 12(sp)\n"
 		"sw a3, 4 * 13(sp)\n"
@@ -144,7 +146,7 @@ kernel_entry(void)
 		"lw t4, 4 * 7(sp)\n"
 		"lw t5, 4 * 8(sp)\n"
 		"lw t6, 4 * 9(sp)\n"
-		"lw t0, 4 * 10(sp)\n"
+		"lw a0, 4 * 10(sp)\n"
 		"lw a1, 4 * 11(sp)\n"
 		"lw a2, 4 * 12(sp)\n"
 		"lw a3, 4 * 13(sp)\n"
@@ -173,11 +175,19 @@ void handle_trap(struct trap_frame *f)
 	uint32_t scause = READ_CSR(scause);
 	uint32_t stval = READ_CSR(stval);
 	uint32_t user_pc = READ_CSR(sepc);
-
-	PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
+	if (scause == SCAUSE_ECALL)
+	{
+		handle_syscall(f);
+		user_pc +=4;
+	}
+	else
+		PANIC("unexpected trap scause=%x, stval=%x, sepc=%x\n", scause, stval, user_pc);
+	WRITE_CSR(sepc, user_pc);
+	
 }
 
-__attribute__((naked)) void switch_context(uint32_t *prev_sp, uint32_t *next_sp)
+__attribute__((naked)) 
+void switch_context(uint32_t *prev_sp, uint32_t *next_sp)
 {
 	__asm__ __volatile__(
 		"addi sp, sp, -13 * 4\n"
@@ -218,25 +228,6 @@ void delay(void)
 {
 	for (int i = 0; i < 30000000; i++)
 		__asm__ __volatile__("nop");
-}
-
-void proc_a_entry(void)
-{
-	printf("starting process A\n");
-	while (1)
-	{
-		putchar('A');
-		yield();
-	}
-}
-void proc_b_entry(void)
-{
-	printf("starting process B\n");
-	while (1)
-	{
-		putchar('B');
-		yield();
-	}
 }
 
 struct process *create_process(const void *image, size_t image_size)
@@ -307,17 +298,18 @@ void yield(void)
 	}
 	if (next == current_proc)
 		return;
+	struct process *prev = current_proc;
+	current_proc = next;
+
 	__asm__ __volatile__(
 		"sfence.vma\n"
 		"csrw satp, %[satp]\n"
 		"sfence.vma\n"
 		"csrw sscratch, %[sscratch]\n"
 		:
-		: [satp] "r"(SATP_SV32 | ((uint32_t)next->page_table / PAGE_SIZE)),
-		  [sscratch] "r"((uint32_t)&next->stack[sizeof(next->stack)]));
+		: [satp] "r" (SATP_SV32 | ((uint32_t)next->page_table / PAGE_SIZE)),
+		  [sscratch] "r" ((uint32_t)&next->stack[sizeof(next->stack)]));
 
-	struct process *prev = current_proc;
-	current_proc = next;
 	switch_context(&prev->sp, &next->sp);
 }
 
@@ -349,4 +341,37 @@ void user_entry(void)
 		:	[sepc] "r" (USER_BASE),
 			[sstatus] "r" (SSTATUS_SPIE)
 	);
+}
+
+void handle_syscall(struct trap_frame *f){
+	switch (f->a3)
+	{
+	case SYS_PUTCHAR:
+		putchar(f->a0);
+		break;
+	case SYS_GETCHAR:
+		while (1)
+		{
+			long ch = getchar();
+			if (ch >= 0)
+			{
+				f->a0 = ch;
+				break;
+			}
+			yield();
+		}
+		break;
+	case SYS_EXIT:
+		printf("process %d exited\n", current_proc->pid);
+		current_proc->state = PROC_EXITED;
+		yield();
+		PANIC("unreachable");
+	default:
+		PANIC("unexpected syscall a3=%x\n", f->a3);
+	}
+}
+
+long getchar(void){
+	struct sbiret ret = sbi_call(0, 0, 0, 0, 0, 0, 0, 2);
+	return ret.error;
 }
