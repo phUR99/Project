@@ -46,7 +46,7 @@ graph TD
 
 ```mermaid
 graph TD
-    Gen[Generate HMM Sequence (HMM.m)]
+    Gen[Generate HMM Sequence<br>HMM.m]
     Gen --> Obs[Observed Sequence]
     Obs --> Decode[Viterbi Algorithm]
     Decode --> Compare[Compare to True Hidden States]
