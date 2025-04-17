@@ -5,24 +5,24 @@
 ```mermaid
 graph TD
     subgraph 사용자영역
-        shell["Shell<br/>(shell.c)"]
-        userlib["UserLib<br/>(user.c, user.h)"]
+        shell[Shell - shell.c]
+        userlib[UserLib - user.c, user.h]
     end
 
     subgraph 커널영역
-        kernel["Kernel<br/>(kernel.c)"]
-        common["Common<br/>(common.c, common.h)"]
-        virtio["VirtIO Driver"]
-        fs["File System"]
+        kernel[Kernel - kernel.c]
+        common[Common - common.c, common.h]
+        virtio[VirtIO Driver]
+        fs[File System]
     end
 
     subgraph 빌드와실행
-        build["Build Script<br/>(run.sh)"]
-        qemu["QEMU<br/>환경"]
+        build[Build Script - run.sh]
+        qemu[QEMU 실행 환경]
     end
 
     shell --> userlib
-    userlib -->|"syscall"| kernel
+    userlib --> kernel
     kernel --> fs
     kernel --> virtio
     kernel --> common
@@ -37,12 +37,12 @@ graph TD
 
 ```mermaid
 graph TD
-    Boot[boot.s] -->|"Set SP"| kernel_main
-    kernel_main --> InitVirtio[virtio_blk_init()]
-    InitVirtio --> InitFS[fs_init()]
-    InitFS --> IdleProc[create_process(NULL, 0)]
-    IdleProc --> ShellProc[create_process(shell.bin)]
-    ShellProc --> yield
+    boot[boot.s] --> kernel_main[Set SP and call kernel_main]
+    kernel_main --> init_virtio[virtio_blk_init]
+    init_virtio --> init_fs[fs_init]
+    init_fs --> idle_proc[create_process for idle]
+    idle_proc --> shell_proc[create_process shell.bin]
+    shell_proc --> yield
 ```
 
 ---
@@ -53,42 +53,41 @@ graph TD
 
 ```mermaid
 graph TD
-    UserApp --> Syscall["ecall (user.c)"]
-    Syscall --> Trap["kernel_entry → handle_trap()"]
-    Trap --> handle_syscall
-    handle_syscall -->|"SYS_PUTCHAR"| putchar
-    handle_syscall -->|"SYS_GETCHAR"| getchar
-    handle_syscall -->|"SYS_EXIT"| process_exit
-    handle_syscall -->|"SYS_READFILE / SYS_WRITEFILE"| fs_lookup
-    fs_lookup --> fs_flush
+    user_app[User App] --> syscall_call[ecall in user.c]
+    syscall_call --> trap_entry[kernel_entry → handle_trap]
+    trap_entry --> handle_syscall
+    handle_syscall --> putchar_call[SYS_PUTCHAR → putchar]
+    handle_syscall --> getchar_call[SYS_GETCHAR → getchar]
+    handle_syscall --> exit_call[SYS_EXIT → process_exit]
+    handle_syscall --> readfile_call[SYS_READFILE → fs_lookup → fs_flush]
 ```
 
 ### 📁 파일 시스템 구조
 
 ```mermaid
 graph TD
-    files["file[] in memory"] --> fs_flush
-    fs_flush -->|"tar format"| disk["512B 섹터 배열"]
-    disk --> virtio["virtio-blk write"]
+    memory_file[file[] in memory] --> fs_flush
+    fs_flush --> disk_block[tar format to disk sector]
+    disk_block --> virtio_write[virtio-blk write]
 ```
 
 ### 💿 VirtIO 디바이스 초기화 흐름
 
 ```mermaid
 graph TD
-    kernel_main --> virtio_blk_init
-    virtio_blk_init --> CheckRegs["Check VIRTIO_REG_MAGIC..."]
-    CheckRegs --> virtq_init
-    virtq_init --> SetupRegs
+    start --> init[virtio_blk_init]
+    init --> check[Check VIRTIO_REG_MAGIC]
+    check --> setup_queue[virtqueue init]
+    setup_queue --> setup_regs[Set up registers]
 ```
 
 ### 🧵 프로세스 컨텍스트 스위칭
 
 ```mermaid
 graph TD
-    yield --> PickNext["Select next runnable process"]
-    PickNext --> satp["Set SATP + sscratch CSR"]
-    satp --> switch_context
+    yield --> pick_proc[Select next runnable process]
+    pick_proc --> set_satp[Set SATP + sscratch]
+    set_satp --> switch_context
 ```
 
 ---
@@ -97,11 +96,11 @@ graph TD
 
 ```mermaid
 graph TD
-    shell_main["main in shell.c"] --> ParseCommand
-    ParseCommand -->|"hello"| print_hello
-    ParseCommand -->|"exit"| exit()
-    ParseCommand -->|"readfile"| readfile()
-    ParseCommand -->|"writefile"| writefile()
+    shell_main[main in shell.c] --> parse_command[Parse Command]
+    parse_command --> hello_cmd[Run hello]
+    parse_command --> exit_cmd[Run exit]
+    parse_command --> readfile_cmd[Run readfile]
+    parse_command --> writefile_cmd[Run writefile]
 ```
 
 ---
@@ -110,8 +109,8 @@ graph TD
 
 ```mermaid
 graph TD
-    shell --> user_start["start()"]
-    user_start --> user_main["main() in shell.c"]
+    shell --> user_start[start]
+    user_start --> user_main[main - shell.c]
     user_main --> syscall_exit
     user_main --> syscall_getchar
     user_main --> syscall_readfile
@@ -135,8 +134,8 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant User as User App (shell.c)
-    participant Libc as User Library (user.c)
+    participant User as User App
+    participant Libc as User Library
     participant Kernel as Kernel
     participant FS as File System
     participant Disk as VirtIO
@@ -171,4 +170,3 @@ $ ./run.sh
 - `shell.c + user.c + common.c` → `shell.elf` → `shell.bin`
 - `kernel.c + common.c + shell.bin.o` → `kernel.elf`
 - QEMU에서 `kernel.elf` 실행
-
