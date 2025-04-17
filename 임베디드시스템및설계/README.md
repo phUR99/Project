@@ -16,19 +16,26 @@ This repository contains a real-time object detection pipeline using YOLOv5 expo
 ---
 
 ## 📽️ Runtime Flow
-```mermaid
-graph TD
-    Start[Start Program] --> LoadClasses[Load class names from .txt]
-    LoadClasses --> BuildModel[Initialize ONNX model (CPU/GPU)]
-    BuildModel --> LoadVideo[cv2.VideoCapture - sample.mp4]
 
-    loop[While frame available] --> Preprocess[Resize and pad]
-    Preprocess --> Inference[ONNX model inference]
-    Inference --> Postprocess[wrap_detection - confidence + NMS]
-    Postprocess --> Draw[Draw bounding boxes + labels]
-    Draw --> FPS[Update FPS counter]
-    FPS --> ShowFrame[cv2.imshow()]
+> ⚠️ Mermaid diagrams may not render in all Markdown viewers. Use GitHub or Live Editor to preview.
+
+```mermaid
+flowchart TD
+    Start --> LoadClasses
+    LoadClasses --> BuildModel
+    BuildModel --> LoadVideo
+    LoadVideo --> loop
+
+    loop --> Preprocess
+    Preprocess --> Inference
+    Inference --> Postprocess
+    Postprocess --> Draw
+    Draw --> FPS
+    FPS --> ShowFrame
     ShowFrame --> loop
+
+    classDef io fill:#f9f,stroke:#333,stroke-width:1px;
+    class Start,LoadClasses,BuildModel,LoadVideo io;
 ```
 
 ---
