@@ -1,4 +1,4 @@
-```
+```mermaid
 ---
 title : train.ipynb
 ---
@@ -42,7 +42,7 @@ graph TD
 
 ```
 
-```
+```mermaid
 ---
 title: eval.ipynb
 ---
