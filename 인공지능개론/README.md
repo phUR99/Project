@@ -3,7 +3,7 @@
 title : train.ipynb
 ---
 graph TD
-    A0["0. Mask augmentation"]
+    A0["Mask augmentation"]
     A1["Mount Google Drive"]
     A2["Change directory to detect_mask"]
     A3["Unzip data.zip"]
@@ -15,18 +15,18 @@ graph TD
     A9["Run mask_the_face.py (2)"]
     A10["Import wandb"]
 
-    B0["1. Prepare Data for Training"]
+    B0["Prepare Data for Training"]
     B1["Import packages"]
     B2["Define transforms"]
     B3["Define train_path"]
     B4["Check data loader"]
 
-    C0["2. Prepare Model"]
+    C0["Prepare Model"]
     C1["Assign device"]
     C2["Import model packages"]
     C3["Load and modify model"]
 
-    D0["3. Training"]
+    D0["Training"]
     D1["Import torch"]
     D2["Define train_model()"]
     D3["Define val_model()"]
