@@ -67,8 +67,8 @@ graph TD
 ```mermaid
 graph TD
     memfile[file memory array] --> flush[flush to disk]
-    flush --> block[disk block (tar format)]
-    block --> virtioio[virtio-blk write]
+    flush --> diskblock[disk block - tar format]
+    diskblock --> virtioio[virtio-blk write]
 ```
 
 ### 💿 VirtIO 디바이스 초기화 흐름
