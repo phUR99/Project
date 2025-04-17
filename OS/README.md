@@ -66,9 +66,9 @@ graph TD
 
 ```mermaid
 graph TD
-    memory_file[file[] in memory] --> fs_flush
-    fs_flush --> disk_block[tar format to disk sector]
-    disk_block --> virtio_write[virtio-blk write]
+    memfile[file memory array] --> flush[flush to disk]
+    flush --> block[disk block (tar format)]
+    block --> virtioio[virtio-blk write]
 ```
 
 ### 💿 VirtIO 디바이스 초기화 흐름
@@ -170,3 +170,4 @@ $ ./run.sh
 - `shell.c + user.c + common.c` → `shell.elf` → `shell.bin`
 - `kernel.c + common.c + shell.bin.o` → `kernel.elf`
 - QEMU에서 `kernel.elf` 실행
+
